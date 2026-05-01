@@ -38,19 +38,19 @@ public class CreateSubscriptionTable {
 
                     .withKeySchema(
                             new KeySchemaElement("email",   KeyType.HASH), // partition key
-                            new KeySchemaElement("songKey", KeyType.RANGE)) // sort key
+                            new KeySchemaElement("songkey", KeyType.RANGE)) // sort key
 
 
                     .withAttributeDefinitions(
                             new AttributeDefinition("email",   ScalarAttributeType.S),
-                            new AttributeDefinition("songKey", ScalarAttributeType.S))
+                            new AttributeDefinition("songkey", ScalarAttributeType.S))
 
 
                     .withGlobalSecondaryIndexes(
                             new GlobalSecondaryIndex()
                                     .withIndexName("song-subscribers-index")
                                     .withKeySchema(
-                                            new KeySchemaElement("songKey", KeyType.HASH),
+                                            new KeySchemaElement("songkey", KeyType.HASH),
                                             new KeySchemaElement("email",   KeyType.RANGE))
                                     .withProjection(new Projection()
                                             .withProjectionType(ProjectionType.ALL)))
