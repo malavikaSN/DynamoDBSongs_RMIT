@@ -26,21 +26,4 @@ public class MusicHandler {
 
         return response;
     }
-
-public static void main(String[] args) {
-
-    MusicHandler handler = new MusicHandler();
-    
-        // 模拟前端请求
-    Map<String, String> input = new HashMap<>();
-    
-    input.put("artist", "Adele");
-        // input.put("title", "Hello");
-        // input.put("year", "2015");
-        // input.put("album", "25");
-    
-    Map<String, Object> result = handler.handleRequest(input);
-    
-    System.out.println(result);
-    }
 }
