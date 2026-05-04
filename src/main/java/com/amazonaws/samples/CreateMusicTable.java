@@ -47,7 +47,6 @@ public class CreateMusicTable {
                             new AttributeDefinition("title",  ScalarAttributeType.S),
                             new AttributeDefinition("album",  ScalarAttributeType.S),
                             new AttributeDefinition("songkey",  ScalarAttributeType.S),
-                            new AttributeDefinition("album",  ScalarAttributeType.S),
                             new AttributeDefinition("artist", ScalarAttributeType.S),
                             new AttributeDefinition("year",   ScalarAttributeType.S))
 
