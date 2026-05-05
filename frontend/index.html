@@ -19,6 +19,31 @@
   <main>
     <section id="songs">
       <h2>Song list (placeholder)</h2>
+      <section id="search" style="margin-bottom:18px;">
+        <h3>Search</h3>
+        <div class="form-grid">
+          <div>
+            <h4>By title + artist</h4>
+            <label>Title: <input id="q-title" name="title"></label>
+            <label>Artist: <input id="q-artist" name="artist"></label>
+            <div class="container-row"><button id="search-title-artist">Search</button></div>
+          </div>
+
+          <div>
+            <h4>By album + artist</h4>
+            <label>Album: <input id="q-album" name="album"></label>
+            <label>Artist: <input id="q-artist2" name="artist"></label>
+            <div class="container-row"><button id="search-album-artist">Search</button></div>
+          </div>
+        </div>
+
+        <div style="margin-top:12px;">
+          <h4>By artist + year</h4>
+          <label>Artist: <input id="q-artist3" name="artist"></label>
+          <label>Year: <input id="q-year" name="year"></label>
+          <div class="container-row"><button id="search-artist-year">Search</button></div>
+        </div>
+      </section>
       <p>This page will list songs and allow image upload to S3 via presigned URLs.</p>
       <div id="song-list"></div>
 
@@ -81,6 +106,39 @@
     }
 
     loadSongs();
+
+    // Search handlers that use backend query when available or fallback to client filter
+    async function renderSongsList(list) {
+      const el = document.getElementById('song-list');
+      el.innerHTML = list.map(s => `
+            <div class="song-card">
+              <img src="${s.image_url||''}" alt="${s.title||''}"/>
+              <h4>${s.title||''}</h4>
+              <p>${s.artist||''} — ${s.album || ''} (${s.year || ''})</p>
+            </div>
+          `).join('\n');
+    }
+
+    document.getElementById('search-title-artist').addEventListener('click', async ()=>{
+      const title = document.getElementById('q-title').value;
+      const artist = document.getElementById('q-artist').value;
+      const res = await api.querySongs({ type: 'title-artist', title, artist });
+      if (res.songs) renderSongsList(res.songs);
+    });
+
+    document.getElementById('search-album-artist').addEventListener('click', async ()=>{
+      const album = document.getElementById('q-album').value;
+      const artist = document.getElementById('q-artist2').value;
+      const res = await api.querySongs({ type: 'album-artist', album, artist });
+      if (res.songs) renderSongsList(res.songs);
+    });
+
+    document.getElementById('search-artist-year').addEventListener('click', async ()=>{
+      const artist = document.getElementById('q-artist3').value;
+      const year = document.getElementById('q-year').value;
+      const res = await api.querySongs({ type: 'artist-year', artist, year });
+      if (res.songs) renderSongsList(res.songs);
+    });
 
     document.getElementById('upload-form').addEventListener('submit', async (e) => {
       e.preventDefault();
