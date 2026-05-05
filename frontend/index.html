@@ -1,0 +1,102 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>DynamoDB Songs - Main</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header>
+    <h1>DynamoDB Songs</h1>
+    <nav>
+      <a href="login.html">Login</a> |
+      <a href="register.html">Register</a>
+    </nav>
+  </header>
+
+  <main>
+    <section id="songs">
+      <h2>Song list (placeholder)</h2>
+      <p>This page will list songs and allow image upload to S3 via presigned URLs.</p>
+      <div id="song-list"></div>
+
+      <h3>Upload song image and metadata</h3>
+      <form id="upload-form">
+        <label>Artist: <input name="artist" required></label>
+        <label>Title: <input name="title" required></label>
+        <label>Album: <input name="album"></label>
+        <label>Year: <input name="year"></label>
+        <label>Image: <input type="file" name="image" accept="image/*" required></label>
+        <button type="submit">Upload</button>
+      </form>
+      <p id="upload-result"></p>
+    </section>
+  </main>
+
+  <script src="api.js"></script>
+  <script>
+    // Placeholder to fetch songs via API
+    async function loadSongs() {
+      // Call /api/songs (not implemented yet)
+      const el = document.getElementById('song-list');
+      try {
+        const res = await api.get('/api/songs');
+        if (res.songs) {
+          el.innerHTML = res.songs.map(s => `<div><strong>${s.title}</strong> — ${s.artist} (${s.year}) <br/><img src="${s.image_url||''}" style="max-width:120px"/></div>`).join('\n');
+        } else {
+          el.textContent = 'No songs returned';
+        }
+      } catch (e) {
+        el.textContent = 'Failed to load songs: ' + e.message;
+      }
+    }
+
+    loadSongs();
+
+    document.getElementById('upload-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const form = e.target;
+      const file = form.image.files[0];
+      if (!file) return;
+
+      // choose a key for the file
+      const key = `${Date.now()}_${file.name}`;
+      const bucket = 'YOUR_BUCKET_NAME'; // replace
+
+      // request presigned URL
+      const presign = await api.presignUpload(bucket, key);
+      if (!presign.url) {
+        document.getElementById('upload-result').textContent = 'Presign failed: ' + JSON.stringify(presign);
+        return;
+      }
+
+      // upload file to S3
+      const up = await api.uploadToS3(presign.url, file);
+      if (!up.success) {
+        document.getElementById('upload-result').textContent = 'Upload failed: ' + JSON.stringify(up);
+        return;
+      }
+
+      // save metadata to backend
+      const songKey = form.title.value + '#' + form.album.value + '#' + form.year.value;
+      const meta = {
+        artist: form.artist.value,
+        songKey: songKey,
+        title: form.title.value,
+        album: form.album.value,
+        year: form.year.value,
+        image_url: `https://${bucket}.s3.amazonaws.com/${key}`
+      };
+
+      const saved = await api.post('/api/songs', meta);
+      if (saved.success) {
+        document.getElementById('upload-result').textContent = 'Saved';
+        loadSongs();
+      } else {
+        document.getElementById('upload-result').textContent = 'Save failed: ' + JSON.stringify(saved);
+      }
+    });
+  </script>
+</body>
+</html>
