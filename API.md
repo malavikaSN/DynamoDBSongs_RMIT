@@ -2,7 +2,7 @@
 
 POST /api/register
 - Request: { email, user_name, password }
-- Response: 201 { success: true }
+- Response: 200 { success: true }
 
 POST /api/login
 - Request: { email, password }

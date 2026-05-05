@@ -8,13 +8,18 @@
 </head>
 <body>
   <main>
-    <h1>Login</h1>
-    <form id="login-form">
-      <label>Email: <input type="email" name="email" required></label>
-      <label>Password: <input type="password" name="password" required></label>
-      <button type="submit">Login</button>
-    </form>
-    <p id="result"></p>
+    <div class="song-card" style="max-width:420px; margin:0 auto;">
+      <h1 style="margin-top:0;">Login</h1>
+      <form id="login-form">
+        <label>Email: <input type="email" name="email" required></label>
+        <label>Password: <input type="password" name="password" required></label>
+        <div class="container-row">
+          <button type="submit">Login</button>
+          <a href="register.html" style="color:var(--muted); margin-left:8px; align-self:center;">Create account</a>
+        </div>
+      </form>
+      <p id="result" class="note"></p>
+    </div>
   </main>
   <script src="api.js"></script>
   <script>
@@ -28,7 +33,8 @@
 
       const res = await api.post('/api/login', data);
       document.getElementById('result').textContent = res.message || JSON.stringify(res);
-      if (res.success) {
+      if (res.success && res.token) {
+        localStorage.setItem('token', res.token);
         window.location.href = '/index.html';
       }
     });

@@ -1,8 +1,12 @@
 const api = {
   async post(path, body) {
+    const headers = { 'Content-Type': 'application/json' };
+    const token = localStorage.getItem('token');
+    if (token) headers['Authorization'] = 'Bearer ' + token;
+
     const res = await fetch(path, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers,
       body: JSON.stringify(body)
     });
     if (res.headers.get('content-type')?.includes('application/json')) {
@@ -12,7 +16,10 @@ const api = {
   },
 
   async get(path) {
-    const res = await fetch(path, { method: 'GET' });
+    const headers = {};
+    const token = localStorage.getItem('token');
+    if (token) headers['Authorization'] = 'Bearer ' + token;
+    const res = await fetch(path, { method: 'GET', headers });
     if (res.headers.get('content-type')?.includes('application/json')) {
       return await res.json();
     }
