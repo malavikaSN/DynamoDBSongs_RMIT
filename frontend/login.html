@@ -9,7 +9,11 @@
 <body>
   <main>
     <div class="song-card" style="max-width:420px; margin:0 auto;">
-      <h1 style="margin-top:0;">Login</h1>
+      <header style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+        <a href="/index.html" class="secondary" style="text-decoration:none; padding:6px 10px;">Back</a>
+        <h1 style="margin:0; font-size:18px;">Login</h1>
+        <span style="width:48px"></span>
+      </header>
       <form id="login-form">
         <label>Email: <input type="email" name="email" required></label>
         <label>Password: <input type="password" name="password" required></label>
@@ -36,6 +40,8 @@
       document.getElementById('result').textContent = res.message || JSON.stringify(res);
       if (res.success && res.token) {
         localStorage.setItem('token', res.token);
+        // set a friendly flash message and redirect
+        localStorage.setItem('flash', 'Login successful — welcome back!');
         window.location.href = '/index.html';
       }
     });

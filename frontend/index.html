@@ -14,6 +14,7 @@
       <a href="register.html">Register</a>
     </nav>
   </header>
+  <div id="flash" class="flash" style="display:none"></div>
 
   <main>
     <section id="songs">
@@ -43,6 +44,20 @@
 
   <script src="api.js"></script>
   <script>
+    // show one-time flash message set by login/register flows
+    (function(){
+      try {
+        const msg = localStorage.getItem('flash');
+        if (msg) {
+          const el = document.getElementById('flash');
+          el.textContent = msg;
+          el.style.display = 'block';
+          // clear after showing
+          localStorage.removeItem('flash');
+          setTimeout(()=> el.style.display='none', 4500);
+        }
+      } catch(e){ /* ignore */ }
+    })();
     // Placeholder to fetch songs via API
     async function loadSongs() {
       // Call /api/songs (not implemented yet)

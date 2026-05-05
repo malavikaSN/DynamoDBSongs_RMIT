@@ -1,11 +1,12 @@
-:root {
-	--bg: #0f1724; /* deep navy */
-	--card: #0b1220;
-	--muted: #9aa4b2;
-	--accent: #7c5cff; /* violet */
-	--accent-2: #00d4ff; /* cyan */
-	--surface: #0f1728;
-	--card-elev: rgba(124,92,255,0.12);
+:root{
+	--bg-900: #071226;   /* page background */
+	--bg-800: #0b1a33;   /* panels */
+	--muted:  #98A7C1;   /* muted text */
+	--accent:  #7C5CFF;   /* primary neon violet */
+	--accent-2:#00D4FF;   /* cyan highlight */
+	--text:   #E6EEF8;   /* main text */
+	--card-shadow: rgba(124,92,255,0.12);
+	--card-elev: rgba(124,92,255,0.18);
 }
 
 * { box-sizing: border-box; font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial; }
@@ -31,6 +32,8 @@ button.secondary { background: transparent; border: 1px solid rgba(255,255,255,0
 @media (max-width:640px) { .form-grid { grid-template-columns: 1fr; } }
 
 .note { color: var(--muted); font-size:13px; margin-top:8px; }
+
+.flash { background: linear-gradient(90deg,var(--accent),var(--accent-2)); color: #061221; padding:10px 14px; border-radius:8px; text-align:center; margin:12px auto 18px; max-width:960px; }
 
 .container-row { display:flex; gap:12px; align-items:center; }
 
