@@ -8,14 +8,20 @@
 </head>
 <body>
   <main>
-    <h1>Register</h1>
-    <form id="register-form">
-      <label>Email: <input type="email" name="email" required></label>
-      <label>User name: <input type="text" name="user_name" required></label>
-      <label>Password: <input type="password" name="password" required></label>
-      <button type="submit">Register</button>
-    </form>
-    <p id="result"></p>
+    <div class="song-card" style="max-width:420px; margin:0 auto;">
+      <h1 style="margin-top:0;">Create account</h1>
+      <form id="register-form">
+        <label>Email: <input type="email" name="email" required></label>
+        <label>User name: <input type="text" name="user_name" required></label>
+        <label>Password: <input type="password" name="password" required></label>
+        <div class="container-row">
+          <button type="button" class="secondary" onclick="window.location.href='/index.html'">Back</button>
+          <button type="submit">Register</button>
+          <a href="login.html" style="color:var(--muted); margin-left:8px; align-self:center;">Sign in</a>
+        </div>
+      </form>
+      <p id="result" class="note"></p>
+    </div>
   </main>
   <script src="api.js"></script>
   <script>
