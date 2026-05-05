@@ -23,12 +23,19 @@
 
       <h3>Upload song image and metadata</h3>
       <form id="upload-form">
-        <label>Artist: <input name="artist" required></label>
-        <label>Title: <input name="title" required></label>
-        <label>Album: <input name="album"></label>
-        <label>Year: <input name="year"></label>
+        <div class="form-grid">
+          <label>Artist: <input name="artist" required></label>
+          <label>Title: <input name="title" required></label>
+        </div>
+        <div class="form-grid">
+          <label>Album: <input name="album"></label>
+          <label>Year: <input name="year"></label>
+        </div>
         <label>Image: <input type="file" name="image" accept="image/*" required></label>
-        <button type="submit">Upload</button>
+        <div class="container-row">
+          <button type="submit">Upload</button>
+          <button type="button" class="secondary" id="clear-form">Clear</button>
+        </div>
       </form>
       <p id="upload-result"></p>
     </section>
@@ -43,7 +50,13 @@
       try {
         const res = await api.get('/api/songs');
         if (res.songs) {
-          el.innerHTML = res.songs.map(s => `<div><strong>${s.title}</strong> — ${s.artist} (${s.year}) <br/><img src="${s.image_url||''}" style="max-width:120px"/></div>`).join('\n');
+          el.innerHTML = res.songs.map(s => `
+            <div class="song-card">
+              <img src="${s.image_url||''}" alt="${s.title}"/>
+              <h4>${s.title}</h4>
+              <p>${s.artist} — ${s.album || ''} (${s.year || ''})</p>
+            </div>
+          `).join('\n');
         } else {
           el.textContent = 'No songs returned';
         }
