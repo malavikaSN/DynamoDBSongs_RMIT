@@ -38,3 +38,4 @@ build/
 ### Mac OS ###
 .DS_Storeapi-server.log
 frontend/frontend-server.log
+api-server.log
