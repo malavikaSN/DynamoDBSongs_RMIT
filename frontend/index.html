@@ -1,0 +1,178 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>DynamoDB Songs - Main</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header>
+    <h1>DynamoDB Songs</h1>
+    <nav>
+      <a href="login.html">Login</a> |
+      <a href="register.html">Register</a>
+    </nav>
+  </header>
+  <div id="flash" class="flash" style="display:none"></div>
+
+  <main>
+    <section id="songs">
+      <h2>Song list (placeholder)</h2>
+      <section id="search" style="margin-bottom:18px;">
+        <h3>Search</h3>
+        <div style="display:flex; gap:12px; align-items:center; max-width:720px;">
+          <input id="q-text" type="text" placeholder="Search text (title, artist, album or year)" style="flex:1; padding:10px; border-radius:8px;" />
+          <select id="q-type" style="padding:8px; border-radius:8px;">
+            <option value="title-artist">Title + Artist</option>
+            <option value="album-artist">Album + Artist</option>
+            <option value="artist-year">Artist + Year</option>
+          </select>
+          <button id="search-run">Search</button>
+        </div>
+      </section>
+      <p>This page will list songs and allow image upload to S3 via presigned URLs.</p>
+      <div id="song-list"></div>
+
+      <h3>Upload song image and metadata</h3>
+      <form id="upload-form">
+        <div class="form-grid">
+          <label>Artist: <input name="artist" required></label>
+          <label>Title: <input name="title" required></label>
+        </div>
+        <div class="form-grid">
+          <label>Album: <input name="album"></label>
+          <label>Year: <input name="year"></label>
+        </div>
+        <label>Image: <input type="file" name="image" accept="image/*" required></label>
+        <div class="container-row">
+          <button type="submit">Upload</button>
+          <button type="button" class="secondary" id="clear-form">Clear</button>
+        </div>
+      </form>
+      <p id="upload-result"></p>
+    </section>
+  </main>
+
+  <script src="api.js"></script>
+  <script>
+    // show one-time flash message set by login/register flows
+    (function(){
+      try {
+        const msg = localStorage.getItem('flash');
+        if (msg) {
+          const el = document.getElementById('flash');
+          el.textContent = msg;
+          el.style.display = 'block';
+          // clear after showing
+          localStorage.removeItem('flash');
+          setTimeout(()=> el.style.display='none', 4500);
+        }
+      } catch(e){ /* ignore */ }
+    })();
+    // Placeholder to fetch songs via API
+    async function loadSongs() {
+      // Call /api/songs (not implemented yet)
+      const el = document.getElementById('song-list');
+      try {
+        const res = await api.get('/api/songs');
+        if (res.songs) {
+          el.innerHTML = res.songs.map(s => `
+            <div class="song-card">
+              <img src="${s.image_url||''}" alt="${s.title}"/>
+              <h4>${s.title}</h4>
+              <p>${s.artist} — ${s.album || ''} (${s.year || ''})</p>
+            </div>
+          `).join('\n');
+        } else {
+          el.textContent = 'No songs returned';
+        }
+      } catch (e) {
+        el.textContent = 'Failed to load songs: ' + e.message;
+      }
+    }
+
+    loadSongs();
+
+    // Search handlers that use backend query when available or fallback to client filter
+    async function renderSongsList(list) {
+      const el = document.getElementById('song-list');
+      el.innerHTML = list.map(s => `
+            <div class="song-card">
+              <img src="${s.image_url||''}" alt="${s.title||''}"/>
+              <h4>${s.title||''}</h4>
+              <p>${s.artist||''} — ${s.album || ''} (${s.year || ''})</p>
+            </div>
+          `).join('\n');
+    }
+
+    document.getElementById('search-run').addEventListener('click', async ()=>{
+      const text = document.getElementById('q-text').value.trim();
+      const type = document.getElementById('q-type').value;
+
+      let query = { type };
+      // split text into simple heuristics depending on type
+      if (type === 'title-artist') {
+        const parts = text.split(' - ');
+        query.title = parts[0] || '';
+        query.artist = parts[1] || '';
+      } else if (type === 'album-artist') {
+        const parts = text.split(' - ');
+        query.album = parts[0] || '';
+        query.artist = parts[1] || '';
+      } else if (type === 'artist-year') {
+        const parts = text.split(' ');
+        query.artist = parts.slice(0, -1).join(' ');
+        query.year = parts.slice(-1)[0] || '';
+      }
+
+      const res = await api.querySongs(query);
+      if (res.songs) renderSongsList(res.songs);
+    });
+
+    document.getElementById('upload-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const form = e.target;
+      const file = form.image.files[0];
+      if (!file) return;
+
+      // choose a key for the file
+      const key = `${Date.now()}_${file.name}`;
+      const bucket = 'YOUR_BUCKET_NAME'; // replace
+
+      // request presigned URL
+      const presign = await api.presignUpload(bucket, key);
+      if (!presign.url) {
+        document.getElementById('upload-result').textContent = 'Presign failed: ' + JSON.stringify(presign);
+        return;
+      }
+
+      // upload file to S3
+      const up = await api.uploadToS3(presign.url, file);
+      if (!up.success) {
+        document.getElementById('upload-result').textContent = 'Upload failed: ' + JSON.stringify(up);
+        return;
+      }
+
+      // save metadata to backend
+      const songKey = form.title.value + '#' + form.album.value + '#' + form.year.value;
+      const meta = {
+        artist: form.artist.value,
+        songKey: songKey,
+        title: form.title.value,
+        album: form.album.value,
+        year: form.year.value,
+        image_url: `https://${bucket}.s3.amazonaws.com/${key}`
+      };
+
+      const saved = await api.post('/api/songs', meta);
+      if (saved.success) {
+        document.getElementById('upload-result').textContent = 'Saved';
+        loadSongs();
+      } else {
+        document.getElementById('upload-result').textContent = 'Save failed: ' + JSON.stringify(saved);
+      }
+    });
+  </script>
+</body>
+</html>
