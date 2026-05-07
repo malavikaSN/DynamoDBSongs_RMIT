@@ -6,32 +6,50 @@
   <title>Register</title>
   <link rel="stylesheet" href="styles.css">
 </head>
+
 <body>
   <main>
     <div class="song-card" style="max-width:420px; margin:0 auto;">
+
       <header style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
         <a href="/index.html" class="secondary" style="text-decoration:none; padding:6px 10px;">Back</a>
         <h1 style="margin:0; font-size:18px;">Create account</h1>
         <span style="width:48px"></span>
       </header>
+
       <form id="register-form">
-        <label>Email: <input type="email" name="email" required></label>
-        <label>User name: <input type="text" name="user_name" required></label>
-        <label>Password: <input type="password" name="password" required></label>
+        <label>Email:
+          <input type="email" name="email" required>
+        </label>
+
+        <label>User name:
+          <input type="text" name="user_name" required>
+        </label>
+
+        <label>Password:
+          <input type="password" name="password" required>
+        </label>
+
         <div class="container-row">
           <button type="button" class="secondary" onclick="window.location.href='/index.html'">Back</button>
           <button type="submit">Register</button>
           <a href="login.html" style="color:var(--muted); margin-left:8px; align-self:center;">Sign in</a>
         </div>
       </form>
+
       <p id="result" class="note"></p>
+
     </div>
   </main>
+
   <script src="api.js"></script>
+
   <script>
     document.getElementById('register-form').addEventListener('submit', async (e) => {
       e.preventDefault();
+
       const form = e.target;
+
       const data = {
         email: form.email.value,
         user_name: form.user_name.value,
@@ -39,25 +57,30 @@
       };
 
       const res = await api.post('/api/register', data);
-      document.getElementById('result').textContent = res.message || JSON.stringify(res);
+
+      document.getElementById('result').textContent =
+        res.message || JSON.stringify(res);
+
       if (res.success) {
-        // set a friendly flash message and redirect to login
         localStorage.setItem('flash', 'Account created — you can sign in now');
         window.location.href = '/login.html';
       }
     });
-    // warn if leaving with unsaved data
-    (function(){
+
+    // Warn user about unsaved changes if they try to leave the page
+    (function () {
       const form = document.getElementById('register-form');
       let dirty = false;
-      form.addEventListener('input', ()=> dirty = true);
-      window.addEventListener('beforeunload', (e)=>{
+
+      form.addEventListener('input', () => dirty = true);
+
+      window.addEventListener('beforeunload', (e) => {
         if (!dirty) return;
         e.preventDefault();
         e.returnValue = '';
       });
-      // after submission clear dirty flag so redirect won't warn
-      form.addEventListener('submit', ()=> dirty = false);
+
+      form.addEventListener('submit', () => dirty = false);
     })();
   </script>
 </body>

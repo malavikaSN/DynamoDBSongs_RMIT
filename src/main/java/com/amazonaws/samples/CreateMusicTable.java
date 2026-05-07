@@ -2,7 +2,7 @@ package com.amazonaws.samples;
 
 import java.util.Arrays;
 
-import com.amazonaws.auth.profile.ProfileCredentialsProvider;
+import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder;
@@ -26,7 +26,7 @@ public class CreateMusicTable {
         // Connect to DynamoDB
         AmazonDynamoDB client = AmazonDynamoDBClientBuilder.standard()
                 .withRegion(Regions.US_EAST_1)
-                .withCredentials(new ProfileCredentialsProvider("default"))
+                .withCredentials(DefaultAWSCredentialsProviderChain.getInstance())
                 .build();
 
         DynamoDB dynamoDB = new DynamoDB(client);

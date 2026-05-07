@@ -3,7 +3,8 @@ package com.amazonaws.samples;
 import java.io.File;
 import java.util.Iterator;
 
-import com.amazonaws.auth.profile.ProfileCredentialsProvider;
+import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
+import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder;
@@ -23,7 +24,7 @@ public class LoadMusicData {
         // Connect to DynamoDB
         AmazonDynamoDB client = AmazonDynamoDBClientBuilder.standard()
                 .withRegion(Regions.US_EAST_1)
-                .withCredentials(new ProfileCredentialsProvider("default"))
+                .withCredentials(DefaultAWSCredentialsProviderChain.getInstance())
                 .build();
 
         DynamoDB dynamoDB = new DynamoDB(client);
@@ -49,23 +50,23 @@ public class LoadMusicData {
             String artist   = currentNode.path("artist").asText();
             String year     = currentNode.path("year").asText();
             String imageUrl = currentNode.path("img_url").asText();
-            String songKey = title + "#" + album + "#" + year;
+            String songkey = title + "#" + album + "#" + year;
 
             try {
                 // title -> partition key
                 // album -> sort key
                 table.putItem(new Item()
-                        .withPrimaryKey("artist", artist, "songKey", songKey)
+                        .withPrimaryKey("artist", artist, "songkey", songkey)
                         .withString("title", title)
                         .withString("album", album)
                         .withString("year", year)
                         .withString("image_url", imageUrl));
 
                 successCount++;
-                System.out.println("PutItem succeeded: " + artist + " | " + songKey);
+                System.out.println("PutItem succeeded: " + artist + " | " + songkey);
 
             } catch (Exception e) {
-                System.err.println("Unable to add song: " + artist + " | " + songKey);
+                System.err.println("Unable to add song: " + artist + " | " + songkey);
                 System.err.println(e.getMessage());
                 break;
             }

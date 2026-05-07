@@ -1,6 +1,6 @@
 package com.amazonaws.samples;
 
-import com.amazonaws.auth.profile.ProfileCredentialsProvider;
+import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
@@ -29,7 +29,7 @@ public class S3Helper {
     public S3Helper() {
         this.s3 = AmazonS3ClientBuilder.standard()
                 .withRegion(Regions.US_EAST_1)
-                .withCredentials(new ProfileCredentialsProvider("default"))
+                .withCredentials(DefaultAWSCredentialsProviderChain.getInstance())
                 .build();
     }
 
