@@ -62,7 +62,8 @@
     </section>
   </main>
 
-  <script src="api.js"></script>
+  <!-- Use version number to avoid browser cache -->
+  <script src="api.js?v=6"></script>
 
   <script>
     function showFlashMessage() {
@@ -109,7 +110,15 @@
       localStorage.removeItem('email');
       localStorage.removeItem('user_name');
       localStorage.setItem('flash', 'Logged out successfully');
-      window.location.href = '/login.html';
+      window.location.href = 'login.html';
+    }
+
+    function escapeForAttribute(value) {
+      return String(value || '')
+        .replace(/\\/g, '\\\\')
+        .replace(/'/g, "\\'")
+        .replace(/"/g, '&quot;')
+        .replace(/\n/g, ' ');
     }
 
     function songCardHtml(song, showSubscribeButton) {
@@ -148,31 +157,8 @@
       `;
     }
 
-    function escapeForAttribute(value) {
-      return String(value || '')
-        .replace(/\\/g, '\\\\')
-        .replace(/'/g, "\\'")
-        .replace(/"/g, '&quot;')
-        .replace(/\n/g, ' ');
-    }
-
-    async function loadSongs() {
-      const el = document.getElementById('song-list');
-      const resultEl = document.getElementById('query-result');
-
-      try {
-        const res = await api.get('/api/songs');
-
-        if (res.songs && res.songs.length > 0) {
-          el.innerHTML = res.songs.map(song => songCardHtml(song, true)).join('');
-          resultEl.textContent = `${res.songs.length} song(s) loaded.`;
-        } else {
-          el.textContent = 'No songs returned.';
-          resultEl.textContent = '';
-        }
-      } catch (e) {
-        el.textContent = 'Failed to load songs: ' + e.message;
-      }
+    function hasAnyQueryField(query) {
+      return query.title || query.year || query.artist || query.album;
     }
 
     async function querySongs() {
@@ -186,8 +172,15 @@
       const el = document.getElementById('song-list');
       const resultEl = document.getElementById('query-result');
 
+      if (!hasAnyQueryField(query)) {
+        el.textContent = 'Please enter at least one search field.';
+        resultEl.textContent = '';
+        return;
+      }
+
       try {
-        const res = await api.post('/api/songs/query', query);
+        // Use GET /api/songs?... through api.js
+        const res = await api.querySongs(query);
 
         if (res.songs && res.songs.length > 0) {
           el.innerHTML = res.songs.map(song => songCardHtml(song, true)).join('');
@@ -198,6 +191,7 @@
         }
       } catch (e) {
         el.textContent = 'Query failed: ' + e.message;
+        resultEl.textContent = '';
       }
     }
 
@@ -206,7 +200,9 @@
       document.getElementById('query-year').value = '';
       document.getElementById('query-artist').value = '';
       document.getElementById('query-album').value = '';
-      loadSongs();
+
+      document.getElementById('song-list').textContent = '';
+      document.getElementById('query-result').textContent = 'Enter at least one field and click Query.';
     }
 
     async function subscribeSong(songkey, title, artist, album, year, imageUrl) {
@@ -214,22 +210,26 @@
 
       if (!email) {
         alert('Please login before subscribing.');
-        window.location.href = '/login.html';
+        window.location.href = 'login.html';
         return;
       }
 
-      const res = await api.post('/api/subscriptions', {
-        email,
-        songkey,
-        title,
-        artist,
-        album,
-        year,
-        image_url: imageUrl
-      });
+      try {
+        const res = await api.post('/api/subscriptions', {
+          email,
+          songkey,
+          title,
+          artist,
+          album,
+          year,
+          image_url: imageUrl
+        });
 
-      alert(res.message || JSON.stringify(res));
-      loadSubscriptions();
+        alert(res.message || JSON.stringify(res));
+        await loadSubscriptions();
+      } catch (e) {
+        alert('Subscribe failed: ' + e.message);
+      }
     }
 
     async function loadSubscriptions() {
@@ -261,24 +261,22 @@
 
       if (!email) {
         alert('Please login first.');
+        window.location.href = 'login.html';
         return;
       }
 
-      const res = await fetch('/api/subscriptions', {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + (localStorage.getItem('token') || '')
-        },
-        body: JSON.stringify({
+      try {
+        // Use api.delete so the request goes to EC2 backend, not S3
+        const res = await api.delete('/api/subscriptions', {
           email,
           songkey
-        })
-      });
+        });
 
-      const data = await res.json();
-      alert(data.message || JSON.stringify(data));
-      loadSubscriptions();
+        alert(res.message || JSON.stringify(res));
+        await loadSubscriptions();
+      } catch (e) {
+        alert('Remove failed: ' + e.message);
+      }
     }
 
     document.getElementById('logout-btn').addEventListener('click', logout);
@@ -288,7 +286,7 @@
 
     showFlashMessage();
     updateUserArea();
-    loadSongs();
+    clearQuery();
     loadSubscriptions();
   </script>
 </body>

@@ -18,6 +18,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class LoadMusicData {
+    private static final String TABLE_NAME = "music";
+    private static final String IMAGE_BUCKET = "a2-113-music-images-v1";
 
     public static void main(String[] args) throws Exception {
 
