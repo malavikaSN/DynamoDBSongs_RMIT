@@ -1,0 +1,9 @@
+.git
+target
+frontend
+images
+*.log
+*.pem
+.aws
+.DS_Store
+api.log

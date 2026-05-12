@@ -25,7 +25,9 @@ import java.util.Map;
 public class ApiServer {
 
     public static void main(String[] args) {
-        port(4567);
+        // Use PORT for ECS. Use 4567 for EC2/local by default.
+        String portValue = System.getenv().getOrDefault("PORT", "4567");
+        port(Integer.parseInt(portValue));
 
         ObjectMapper mapper = new ObjectMapper();
 
@@ -34,7 +36,7 @@ public class ApiServer {
             response.header("Access-Control-Allow-Headers", "Content-Type,Authorization");
             response.header("Access-Control-Allow-Methods", "GET,POST,DELETE,OPTIONS");
         });
-        
+
         options("/*", (request, response) -> {
             response.header("Access-Control-Allow-Headers", "Content-Type,Authorization");
             response.header("Access-Control-Allow-Methods", "GET,POST,DELETE,OPTIONS");
@@ -50,7 +52,7 @@ public class ApiServer {
             return mapper.writeValueAsString(response);
         });
 
-        // POST /api/register
+        // Register a new user
         post("/api/register", (req, res) -> {
             res.type("application/json");
 
@@ -89,7 +91,7 @@ public class ApiServer {
             return mapper.writeValueAsString(response);
         });
 
-        // POST /api/login
+        // Login user
         post("/api/login", (req, res) -> {
             res.type("application/json");
 
@@ -140,7 +142,7 @@ public class ApiServer {
             return mapper.writeValueAsString(response);
         });
 
-        // POST /api/songs/query
+        // Old query endpoint kept for compatibility
         post("/api/songs/query", (req, res) -> {
             res.type("application/json");
 
@@ -166,7 +168,7 @@ public class ApiServer {
             return mapper.writeValueAsString(response);
         });
 
-        // GET /api/songs
+        // Query songs with GET
         get("/api/songs", (req, res) -> {
             res.type("application/json");
 
@@ -187,7 +189,7 @@ public class ApiServer {
             return mapper.writeValueAsString(response);
         });
 
-        // POST /api/songs
+        // Reserved song upload endpoint
         post("/api/songs", (req, res) -> {
             res.type("application/json");
 
@@ -198,10 +200,6 @@ public class ApiServer {
 
             String artist = (String) body.get("artist");
             String songkey = (String) body.get("songkey");
-            String title = (String) body.get("title");
-            String album = (String) body.get("album");
-            String year = (String) body.get("year");
-            String imageUrl = (String) body.get("image_url");
 
             if (artist == null || songkey == null) {
                 res.status(400);
@@ -213,10 +211,6 @@ public class ApiServer {
                 return mapper.writeValueAsString(response);
             }
 
-            // This endpoint is kept for compatibility with frontend upload flow.
-            // Main music loading should still be done by LoadMusicData.java.
-            SubscriptionService dummy = null;
-
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
             response.put("message", "Song upload endpoint reserved. Use LoadMusicData for dataset import.");
@@ -224,7 +218,7 @@ public class ApiServer {
             return mapper.writeValueAsString(response);
         });
 
-        // POST /api/subscriptions
+        // Add subscription
         post("/api/subscriptions", (req, res) -> {
             res.type("application/json");
 
@@ -252,7 +246,7 @@ public class ApiServer {
             return mapper.writeValueAsString(response);
         });
 
-        // GET /api/subscriptions?email=xxx
+        // Get subscriptions
         get("/api/subscriptions", (req, res) -> {
             res.type("application/json");
 
@@ -280,7 +274,7 @@ public class ApiServer {
             return mapper.writeValueAsString(response);
         });
 
-        // DELETE /api/subscriptions
+        // Remove subscription
         delete("/api/subscriptions", (req, res) -> {
             res.type("application/json");
 
