@@ -1,293 +1,104 @@
-<!doctype html>
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>DynamoDB Songs - Main</title>
-  <link rel="stylesheet" href="styles.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Music App Deployment Demo</title>
+  <style>
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: linear-gradient(135deg, #111827, #020617);
+      color: #f8fafc;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .card {
+      width: min(720px, 90%);
+      padding: 40px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 24px;
+      background: rgba(15, 23, 42, 0.82);
+      box-shadow: 0 24px 80px rgba(0, 0, 0, 0.35);
+    }
+
+    h1 {
+      margin: 0 0 12px;
+      font-size: 34px;
+    }
+
+    p {
+      color: #cbd5e1;
+      line-height: 1.6;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 18px;
+      margin-top: 28px;
+    }
+
+    .option {
+      display: block;
+      padding: 22px;
+      border-radius: 18px;
+      text-decoration: none;
+      color: #f8fafc;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      transition: transform 0.18s ease, background 0.18s ease;
+    }
+
+    .option:hover {
+      transform: translateY(-3px);
+      background: rgba(255, 255, 255, 0.14);
+    }
+
+    .option strong {
+      display: block;
+      font-size: 22px;
+      margin-bottom: 8px;
+    }
+
+    .option span {
+      color: #cbd5e1;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    code {
+      color: #93c5fd;
+    }
+  </style>
 </head>
-
 <body>
-  <header>
-    <h1>DynamoDB Songs</h1>
-    <nav>
-      <a href="login.html">Login</a> |
-      <a href="register.html">Register</a> |
-      <button id="logout-btn" type="button">Logout</button>
-    </nav>
-  </header>
+  <main class="card">
+    <h1>Music App Deployment Demo</h1>
+    <p>
+      Choose which backend deployment you want to test. Both versions use the same frontend interface and REST API contract, but they connect to different backend deployments.
+    </p>
 
-  <div id="flash" class="flash" style="display:none"></div>
+    <div class="grid">
+      <a class="option" href="ec2/index.html?v=300">
+        <strong>Open EC2 Version</strong>
+        <span>
+          Frontend calls the EC2 backend.<br />
+          Backend: <code>http://13.221.88.160</code>
+        </span>
+      </a>
 
-  <main>
-    <section id="user-area">
-      <h2>User Area</h2>
-      <p id="user-info">Not logged in</p>
-    </section>
-
-    <section id="query-area">
-      <h2>Query Songs</h2>
-
-      <div class="form-grid">
-        <label>Title:
-          <input id="query-title" type="text">
-        </label>
-
-        <label>Year:
-          <input id="query-year" type="text">
-        </label>
-
-        <label>Artist:
-          <input id="query-artist" type="text">
-        </label>
-
-        <label>Album:
-          <input id="query-album" type="text">
-        </label>
-      </div>
-
-      <div class="container-row">
-        <button id="query-btn" type="button">Query</button>
-        <button id="clear-query-btn" type="button" class="secondary">Clear</button>
-      </div>
-
-      <p id="query-result" class="note"></p>
-      <div id="song-list"></div>
-    </section>
-
-    <section id="subscription-area">
-      <h2>Your Subscriptions</h2>
-      <button id="load-subscriptions-btn" type="button">Refresh Subscriptions</button>
-      <div id="subscription-list"></div>
-    </section>
+      <a class="option" href="ecs/index.html?v=300">
+        <strong>Open ECS Version</strong>
+        <span>
+          Frontend calls the ECS Fargate backend.<br />
+          Backend: <code>http://34.239.138.8</code>
+        </span>
+      </a>
+    </div>
   </main>
-
-  <!-- Use version number to avoid browser cache -->
-  <script src="api.js?v=6"></script>
-
-  <script>
-    function showFlashMessage() {
-      try {
-        const msg = localStorage.getItem('flash');
-
-        if (msg) {
-          const el = document.getElementById('flash');
-          el.textContent = msg;
-          el.style.display = 'block';
-          localStorage.removeItem('flash');
-
-          setTimeout(() => {
-            el.style.display = 'none';
-          }, 4500);
-        }
-      } catch (e) {
-        // Ignore localStorage errors
-      }
-    }
-
-    function getCurrentEmail() {
-      return localStorage.getItem('email');
-    }
-
-    function getCurrentUserName() {
-      return localStorage.getItem('user_name');
-    }
-
-    function updateUserArea() {
-      const email = getCurrentEmail();
-      const userName = getCurrentUserName();
-      const el = document.getElementById('user-info');
-
-      if (email) {
-        el.textContent = `Logged in as: ${userName || 'User'} (${email})`;
-      } else {
-        el.textContent = 'Not logged in. Please login before subscribing.';
-      }
-    }
-
-    function logout() {
-      localStorage.removeItem('token');
-      localStorage.removeItem('email');
-      localStorage.removeItem('user_name');
-      localStorage.setItem('flash', 'Logged out successfully');
-      window.location.href = 'login.html';
-    }
-
-    function escapeForAttribute(value) {
-      return String(value || '')
-        .replace(/\\/g, '\\\\')
-        .replace(/'/g, "\\'")
-        .replace(/"/g, '&quot;')
-        .replace(/\n/g, ' ');
-    }
-
-    function songCardHtml(song, showSubscribeButton) {
-      const imageUrl = song.image_url || '';
-      const title = song.title || '';
-      const artist = song.artist || '';
-      const album = song.album || '';
-      const year = song.year || '';
-      const songkey = song.songkey || `${title}#${album}#${year}`;
-
-      return `
-        <div class="song-card">
-          <img src="${imageUrl}" alt="${title}">
-          <h4>${title}</h4>
-          <p>${artist} — ${album} (${year})</p>
-
-          ${showSubscribeButton ? `
-            <button type="button"
-              onclick="subscribeSong(
-                '${escapeForAttribute(songkey)}',
-                '${escapeForAttribute(title)}',
-                '${escapeForAttribute(artist)}',
-                '${escapeForAttribute(album)}',
-                '${escapeForAttribute(year)}',
-                '${escapeForAttribute(imageUrl)}'
-              )">
-              Subscribe
-            </button>
-          ` : `
-            <button type="button"
-              onclick="removeSubscription('${escapeForAttribute(songkey)}')">
-              Remove
-            </button>
-          `}
-        </div>
-      `;
-    }
-
-    function hasAnyQueryField(query) {
-      return query.title || query.year || query.artist || query.album;
-    }
-
-    async function querySongs() {
-      const title = document.getElementById('query-title').value.trim();
-      const year = document.getElementById('query-year').value.trim();
-      const artist = document.getElementById('query-artist').value.trim();
-      const album = document.getElementById('query-album').value.trim();
-
-      const query = { title, year, artist, album };
-
-      const el = document.getElementById('song-list');
-      const resultEl = document.getElementById('query-result');
-
-      if (!hasAnyQueryField(query)) {
-        el.textContent = 'Please enter at least one search field.';
-        resultEl.textContent = '';
-        return;
-      }
-
-      try {
-        // Use GET /api/songs?... through api.js
-        const res = await api.querySongs(query);
-
-        if (res.songs && res.songs.length > 0) {
-          el.innerHTML = res.songs.map(song => songCardHtml(song, true)).join('');
-          resultEl.textContent = `${res.songs.length} song(s) found.`;
-        } else {
-          el.textContent = 'No result is retrieved. Please query again.';
-          resultEl.textContent = '';
-        }
-      } catch (e) {
-        el.textContent = 'Query failed: ' + e.message;
-        resultEl.textContent = '';
-      }
-    }
-
-    function clearQuery() {
-      document.getElementById('query-title').value = '';
-      document.getElementById('query-year').value = '';
-      document.getElementById('query-artist').value = '';
-      document.getElementById('query-album').value = '';
-
-      document.getElementById('song-list').textContent = '';
-      document.getElementById('query-result').textContent = 'Enter at least one field and click Query.';
-    }
-
-    async function subscribeSong(songkey, title, artist, album, year, imageUrl) {
-      const email = getCurrentEmail();
-
-      if (!email) {
-        alert('Please login before subscribing.');
-        window.location.href = 'login.html';
-        return;
-      }
-
-      try {
-        const res = await api.post('/api/subscriptions', {
-          email,
-          songkey,
-          title,
-          artist,
-          album,
-          year,
-          image_url: imageUrl
-        });
-
-        alert(res.message || JSON.stringify(res));
-        await loadSubscriptions();
-      } catch (e) {
-        alert('Subscribe failed: ' + e.message);
-      }
-    }
-
-    async function loadSubscriptions() {
-      const email = getCurrentEmail();
-      const el = document.getElementById('subscription-list');
-
-      if (!email) {
-        el.textContent = 'Please login to view subscriptions.';
-        return;
-      }
-
-      try {
-        const res = await api.get('/api/subscriptions?email=' + encodeURIComponent(email));
-
-        if (res.subscriptions && res.subscriptions.length > 0) {
-          el.innerHTML = res.subscriptions
-            .map(song => songCardHtml(song, false))
-            .join('');
-        } else {
-          el.textContent = 'No subscribed songs yet.';
-        }
-      } catch (e) {
-        el.textContent = 'Failed to load subscriptions: ' + e.message;
-      }
-    }
-
-    async function removeSubscription(songkey) {
-      const email = getCurrentEmail();
-
-      if (!email) {
-        alert('Please login first.');
-        window.location.href = 'login.html';
-        return;
-      }
-
-      try {
-        // Use api.delete so the request goes to EC2 backend, not S3
-        const res = await api.delete('/api/subscriptions', {
-          email,
-          songkey
-        });
-
-        alert(res.message || JSON.stringify(res));
-        await loadSubscriptions();
-      } catch (e) {
-        alert('Remove failed: ' + e.message);
-      }
-    }
-
-    document.getElementById('logout-btn').addEventListener('click', logout);
-    document.getElementById('query-btn').addEventListener('click', querySongs);
-    document.getElementById('clear-query-btn').addEventListener('click', clearQuery);
-    document.getElementById('load-subscriptions-btn').addEventListener('click', loadSubscriptions);
-
-    showFlashMessage();
-    updateUserArea();
-    clearQuery();
-    loadSubscriptions();
-  </script>
 </body>
 </html>

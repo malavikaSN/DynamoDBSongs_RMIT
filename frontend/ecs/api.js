@@ -1,5 +1,5 @@
 // Base URL of backend API (EC2 public IP)
-const API_BASE_URL = 'http://3.95.11.200';
+const API_BASE_URL = 'http://34.239.138.8';
 
 const api = {
 

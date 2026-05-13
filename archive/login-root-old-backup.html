@@ -1,0 +1,73 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Login</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+  <main>
+    <div class="song-card" style="max-width:420px; margin:0 auto;">
+
+      <header style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+        <a href="/index.html" class="secondary" style="text-decoration:none; padding:6px 10px;">Back</a>
+        <h1 style="margin:0; font-size:18px;">Login</h1>
+        <span style="width:48px"></span>
+      </header>
+
+      <form id="login-form">
+        <label>Email:
+          <input type="email" name="email" required>
+        </label>
+
+        <label>Password:
+          <input type="password" name="password" required>
+        </label>
+
+        <div class="container-row">
+          <button type="button" class="secondary" onclick="window.location.href='/index.html'">Back</button>
+          <button type="submit">Login</button>
+          <a href="register.html" style="color:var(--muted); margin-left:8px; align-self:center;">Create account</a>
+        </div>
+      </form>
+
+      <p id="result" class="note"></p>
+
+    </div>
+  </main>
+
+  <script src="api.js"></script>
+
+  <script>
+    document.getElementById('login-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const form = e.target;
+
+      const data = {
+        email: form.email.value,
+        password: form.password.value
+      };
+
+      const res = await api.post('/api/login', data);
+
+      document.getElementById('result').textContent =
+        res.message || JSON.stringify(res);
+
+      if (res.success && res.token) {
+
+        // Store the token and user info in localStorage for later use
+        localStorage.setItem('token', res.token);
+        localStorage.setItem('email', res.email);
+        localStorage.setItem('user_name', res.user_name);
+
+        localStorage.setItem('flash', 'Login successful — welcome back!');
+
+        window.location.href = '/index.html';
+      }
+    });
+  </script>
+</body>
+</html>
