@@ -17,7 +17,7 @@
     }
 
     .card {
-      width: min(720px, 90%);
+      width: min(900px, 90%);
       padding: 40px;
       border: 1px solid rgba(255, 255, 255, 0.12);
       border-radius: 24px;
@@ -50,11 +50,9 @@
       color: #f8fafc;
       background: rgba(255, 255, 255, 0.08);
       border: 1px solid rgba(255, 255, 255, 0.14);
-      transition: transform 0.18s ease, background 0.18s ease;
     }
 
     .option:hover {
-      transform: translateY(-3px);
       background: rgba(255, 255, 255, 0.14);
     }
 
@@ -72,6 +70,7 @@
 
     code {
       color: #93c5fd;
+      word-break: break-all;
     }
   </style>
 </head>
@@ -79,11 +78,11 @@
   <main class="card">
     <h1>Music App Deployment Demo</h1>
     <p>
-      Choose which backend deployment you want to test. Both versions use the same frontend interface and REST API contract, but they connect to different backend deployments.
+      Choose which backend deployment you want to test. All three versions use the same frontend interface and REST API contract, but each connects to a different backend architecture.
     </p>
 
     <div class="grid">
-      <a class="option" href="ec2/index.html?v=300">
+      <a class="option" href="ec2/index.html?v=999">
         <strong>Open EC2 Version</strong>
         <span>
           Frontend calls the EC2 backend.<br />
@@ -91,11 +90,19 @@
         </span>
       </a>
 
-      <a class="option" href="ecs/index.html?v=300">
+      <a class="option" href="ecs/index.html?v=999">
         <strong>Open ECS Version</strong>
         <span>
           Frontend calls the ECS Fargate backend.<br />
           Backend: <code>http://34.239.138.8</code>
+        </span>
+      </a>
+
+      <a class="option" href="lambda/index.html?v=999">
+        <strong>Open Lambda Version</strong>
+        <span>
+          Frontend calls the API Gateway + Lambda backend.<br />
+          Backend: <code>https://sf8qxyfvdg.execute-api.us-east-1.amazonaws.com</code>
         </span>
       </a>
     </div>
