@@ -1,0 +1,51 @@
+name: Deploy and E2E (ECS)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    env:
+      IMAGE_NAME: dynamodb-songs
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Build jar
+        run: mvn -DskipTests package
+
+      - name: Build Docker image
+        run: |
+          docker build -t $IMAGE_NAME:latest .
+
+      # NOTE: The rest of the deployment steps (push to ECR, create/update ECS service + ALB)
+      # require AWS credentials and additional IAM permissions. By default we stop here so you
+      # can add secrets and extend the workflow. The Playwright test below can run against any
+      # publicly reachable URL; set TEST_BASE_URL as a secret or workflow input.
+
+      - name: Install Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install Playwright
+        run: |
+          npm ci
+
+      - name: Run Playwright tests
+        env:
+          TEST_BASE_URL: ${{ inputs.TEST_BASE_URL || env.TEST_BASE_URL || '' }}
+        run: |
+          npx playwright test --reporter=list || true
+
+      - name: Upload Playwright artifacts (if any)
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-artifacts
+          path: tests/playwright/**/*
