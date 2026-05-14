@@ -55,6 +55,21 @@ public class ApiServer {
             return "OK";
         });
 
+        // Global exception handler to log stacktraces and return JSON
+        exception(Exception.class, (e, req, res) -> {
+            e.printStackTrace();
+            res.type("application/json");
+            res.status(500);
+            try {
+                Map<String, Object> out = new HashMap<>();
+                out.put("success", false);
+                out.put("message", e.getMessage());
+                res.body(mapper.writeValueAsString(out));
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+        });
+
     // DynamoDB client used for auth and songs
     AmazonDynamoDB clientDdb = AmazonDynamoDBClientBuilder.standard()
         .withRegion(Regions.US_EAST_1)
