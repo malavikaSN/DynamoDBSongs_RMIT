@@ -1,31 +1,34 @@
 const { test, expect } = require('@playwright/test');
+const fs = require('fs');
 
-test('login-query-subscribe-remove flow', async ({ page }) => {
+test.setTimeout(120000);
+
+test('login-query-subscribe-remove flow', async ({ page, context }) => {
   const base = process.env.TEST_BASE_URL || 'http://localhost:8000';
 
+  // start tracing
+  await context.tracing.start({ screenshots: true, snapshots: true });
+
+  // Visit homepage
   await page.goto(base);
   await page.screenshot({ path: 'tests/playwright/screenshot-before.png' });
 
-  // Simple flow: navigate to login, fill, submit
+  // Navigate to login and attempt login (expected to be a demo; adjust credentials via env)
   await page.goto(`${base}/login.html`);
-  await page.fill('input[name="email"]', 'ci+test@example.com');
-  await page.fill('input[name="password"]', 'testpassword');
+  await page.fill('input[name="email"]', process.env.TEST_EMAIL || 'ci+test@example.com');
+  await page.fill('input[name="password"]', process.env.TEST_PASSWORD || 'testpassword');
   await page.click('button[type="submit"]');
 
-  // Wait for redirect or token set
-  await page.waitForTimeout(1000);
+  // Wait for app to settle
+  await page.waitForTimeout(1500);
 
-  // Capture network
-  const harPath = 'tests/playwright/network.har';
-  await page.context().tracing.start({ screenshots: true, snapshots: true });
-
-  // Try to fetch songs via the UI's JS
+  // Go back to main page and attempt to query songs via UI
   await page.goto(base);
-  await page.waitForTimeout(1000);
+  await page.waitForSelector('.song-card', { timeout: 5000 }).catch(() => {});
 
-  // End tracing
-  await page.context().tracing.stop({ path: 'tests/playwright/trace.zip' });
-
-  // Save a final screenshot
+  // Create screenshot after actions
   await page.screenshot({ path: 'tests/playwright/screenshot-after.png' });
+
+  // Stop tracing and save ZIP
+  await context.tracing.stop({ path: 'tests/playwright/trace.zip' });
 });

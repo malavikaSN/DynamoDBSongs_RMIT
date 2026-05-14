@@ -3,4 +3,4 @@ WORKDIR /app
 COPY target/DynamoDBSongs-1.0-SNAPSHOT.jar /app/app.jar
 EXPOSE 4567
 ENV JAVA_OPTS="-Xmx512m"
-CMD ["sh", "-c", "java $JAVA_OPTS -jar /app/app.jar"]
+ENTRYPOINT ["sh","-c","java $JAVA_OPTS -jar /app/app.jar"]

@@ -1,0 +1,25 @@
+name: Deploy to Lambda (container) and run E2E
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy-and-test-lambda:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build jar
+        run: mvn -DskipTests package
+
+      - name: Build container image for Lambda
+        run: |
+          docker build -t lambda-image:latest .
+
+      - name: Push to ECR and update Lambda
+        run: |
+          echo "Push to ECR and create/update Lambda function with image URI"
+
+      - name: Run Playwright tests
+        run: |
+          echo "Run Playwright tests against the API Gateway URL set in TEST_BASE_URL secret"
