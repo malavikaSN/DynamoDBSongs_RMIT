@@ -13,6 +13,9 @@ import java.util.Date;
 
 import com.amazonaws.auth.profile.ProfileCredentialsProvider;
 import com.amazonaws.regions.Regions;
+import com.amazonaws.client.builder.AwsClientBuilder;
+import com.amazonaws.auth.AWSStaticCredentialsProvider;
+import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder;
 import com.amazonaws.services.dynamodbv2.document.DynamoDB;
@@ -71,10 +74,24 @@ public class ApiServer {
         });
 
     // DynamoDB client used for auth and songs
-    AmazonDynamoDB clientDdb = AmazonDynamoDBClientBuilder.standard()
-        .withRegion(Regions.US_EAST_1)
-        .withCredentials(new ProfileCredentialsProvider("default"))
-        .build();
+    // Support using a local DynamoDB endpoint for local testing by setting DYNAMODB_ENDPOINT
+    String ddbEndpoint = System.getenv("DYNAMODB_ENDPOINT");
+    String awsRegionEnv = System.getenv("AWS_REGION");
+    String awsRegion = awsRegionEnv == null || awsRegionEnv.isEmpty() ? "us-east-1" : awsRegionEnv;
+
+    AmazonDynamoDB clientDdb;
+    if (ddbEndpoint != null && !ddbEndpoint.isEmpty()) {
+        // When using local DynamoDB, the SDK still requires credentials; provide dummy ones.
+        clientDdb = AmazonDynamoDBClientBuilder.standard()
+                .withEndpointConfiguration(new AwsClientBuilder.EndpointConfiguration(ddbEndpoint, awsRegion))
+                .withCredentials(new AWSStaticCredentialsProvider(new BasicAWSCredentials("dummy", "dummy")))
+                .build();
+    } else {
+        clientDdb = AmazonDynamoDBClientBuilder.standard()
+                .withRegion(Regions.fromName(awsRegion))
+                .withCredentials(new ProfileCredentialsProvider("default"))
+                .build();
+    }
 
     DynamoDB dynamoDB = new DynamoDB(clientDdb);
 
